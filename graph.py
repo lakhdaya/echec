@@ -21,7 +21,7 @@ class echiquier(): #ecran du jeu
         self.widthp = self.taille_case*self.width
         self.heightp = self.taille_case*self.height
         self.fpms = 30
-        self.fenetre = pygame.display.set_mode((self.width*self.taille_case+100, self.height*self.taille_case+100))
+        self.fenetre = pygame.display.set_mode((self.width*self.taille_case+TAILLE_GUI_X, self.height*self.taille_case+TAILLE_GUI_Y))
         self.dessiner_echiquier()
 
     def case_vers_pixel(self, pos:tuple) -> tuple:

@@ -32,7 +32,6 @@ class bouton():
     
     def activer_bouton(self, pieces):
         if self.param:
-            print("activer")
             self.fonction(self.param)
         else:
             self.fonction(pieces)
@@ -44,7 +43,6 @@ class GUI():
     def click_sur_bouton(self, pos:tuple, pieces:pieces):
         for bouton in self.boutons:
             if bouton.dedans(pos):
-                print(bouton.name)
                 bouton.activer_bouton(pieces)
 
     def rechercher_bouton(self, name):

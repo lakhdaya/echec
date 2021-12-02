@@ -23,6 +23,5 @@ def pieces_handler(pieces:pieces,  piece:piece, pos_depart:tuple, pos_arrive:tup
             piece_mange = piece.deplacer_piece(pieces, pos_arrive)
             pieces.changement_tour()
             pieces.enregistrer_trajectoire(piece, pos_depart, pos_arrive, piece_mange)
-            print(pieces.historique, pieces.get_nombre_tour())
         else:
             piece.mouv(pos_depart)

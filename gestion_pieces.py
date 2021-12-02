@@ -162,9 +162,10 @@ class piece():
         """
         if self.pos_dans_trajectoire(pos): # and piece_selec.couleur == tour: #a rajjouter pour le tour par tour
             self.mouv(pos)
-            pieces.actualiser_trajectoires()  
+            piece = self.manger_piece(pieces)
             self.actualiser_trajectoire(pieces)
-        return self.manger_piece(pieces)
+            pieces.actualiser_trajectoires()  
+        return piece
 
     def can_mouv_here(self, pos_arrive:tuple):
         return pos_arrive in self.trajectoire
@@ -250,8 +251,13 @@ class roi(piece):
                 piece = pieces.rechercher_piece(traj)
                 if piece:
                     if piece.protege:
-                        print(piece)
                         del self.trajectoire[i]
+                else:
+                    pions = [pieces.rechercher_piece(addition_tuple(traj, (-1, self.couleur*pieces.haut))), pieces.rechercher_piece(addition_tuple(traj, (1, self.couleur*pieces.haut)))]
+                    for pion in pions:
+                        if pion and pion.name == "pion" and pion.couleur != self.couleur:
+                            del self.trajectoire[i]
+
 
     def is_rocking(self, pos_depart):
         if self.pos()[0]- pos_depart[0] == 2:
@@ -464,7 +470,8 @@ class pieces():
             self.changement_tour()
             piece = self.rechercher_piece(self.traduction_norme_echec_position(self.historique[self.nombre_tour][1:3]))
             piece.mouv(self.traduction_norme_echec_position(self.historique[self.nombre_tour][4:]))
-            self.actualiser_trajectoires
+            piece.manger_piece(self)
+            self.actualiser_trajectoires()
 
     def revenir_sur_le_coup(self):
         if self.get_nombre_tour() >= 0:
