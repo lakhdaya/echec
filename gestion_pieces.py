@@ -187,7 +187,7 @@ class pion(piece):
         super().__init__(x, y, couleur, tour)    
         self.name = "pion"
         self.origin = True
-        self.direction_sans_obstacle = [multiplier_tuple(DIRECTIONS["N"], self.haut*self.couleur)]
+        self.direction_sans_obstacle = [multiplier_tuple(DIRECTIONS["N"], self.haut*self.couleur), multiplier_tuple((0, 2), self.haut*self.couleur)]
 
     def promotion(self):
         """
@@ -201,9 +201,13 @@ class pion(piece):
         Pion special car peut manger les diagonales et ne peut pas manger tout droit
         donc on réecrit la fonction pour actualiser la trajectoire selon cette regle
         """
-        super().actualiser_trajectoire(pieces)
+        self.trajectoire = []
+        traj = [addition_tuple(self.pos(), self.direction_sans_obstacle[0]), addition_tuple(self.pos(), self.direction_sans_obstacle[1])]
         if (self.y == 1 and self.couleur*self.haut == 1) or (self.y == 6 and self.couleur*self.haut == -1):
-            self.trajectoire.append((addition_tuple(self.pos(), (0, 2*self.haut*self.couleur))))
+            if not pieces.rechercher_piece(traj[0]) and not pieces.rechercher_piece(traj[1]):
+                self.trajectoire.append(traj[1])
+        if not pieces.rechercher_piece(traj[0]):
+            self.trajectoire.append(traj[0])
         self.rajout_derniere_case(self.trajectoire, pieces, addition_tuple(self.pos(), (1, self.couleur*self.haut)))
         self.rajout_derniere_case(self.trajectoire, pieces, addition_tuple(self.pos(), (-1, self.couleur*self.haut)))
 
@@ -242,6 +246,12 @@ class roi(piece):
             if pieces.en_echec(traj, self.couleur):
                 del self.trajectoire[i]
                 i-=1
+            else:
+                piece = pieces.rechercher_piece(traj)
+                if piece:
+                    if piece.protege:
+                        print(piece)
+                        del self.trajectoire[i]
 
     def is_rocking(self, pos_depart):
         if self.pos()[0]- pos_depart[0] == 2:
@@ -409,8 +419,14 @@ class pieces():
         Actualise les trajectoires de toutes les pieces
         """
         self.reset_protection()
+        r = []
         for piece in self.liste_pieces:
-            piece.actualiser_trajectoire(self)
+            if piece.name == "roi":
+                r.append(piece)
+            else:
+                piece.actualiser_trajectoire(self)
+        for roi in r:
+            roi.actualiser_trajectoire(self)
 
     @staticmethod
     def traduction_position_norme_echec(position:int):
@@ -476,7 +492,8 @@ class pieces():
         pieces_attaquantes = []
         for piece in self.liste_pieces:
             if pos in piece.trajectoire and piece.couleur != couleur:
-                pieces_attaquantes.append(piece)
+                if piece.couleur != couleur and (piece.name != "pion" or piece.x != pos[0]):#rajouter traj diago des pions
+                    pieces_attaquantes.append(piece)
         return pieces_attaquantes
 
     def counter_en_echec(self, pos:tuple, piece:piece, piece_attaque:piece, couleur:int):
