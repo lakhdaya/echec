@@ -45,7 +45,7 @@ def lecture_fichier_FEN(fichier, haut:int) -> gestion_pieces.pieces:
     roi : k pour blanc et K pour noir
     #question fonction dans pieces ou dans le fichier gestion_fichier ?
     """
-    pieces = gestion_pieces.pieces(haut, [])
+    pieces= gestion_pieces.pieces(haut, [])
     disposition_pieces = fichier.read().split("\\")
     positionner_pieces(disposition_pieces, pieces, haut)
     return pieces
