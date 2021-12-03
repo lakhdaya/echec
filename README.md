@@ -9,4 +9,4 @@ Jeu d'echec inspiré du format chess.com en application python pour projet à l'
  
 La convention FEN française est utilisée pour importer une partie et les coups sont notés par la notation algébrique.
 
-Créer par Yassine.Lakhdari
+Créé par Yassine.Lakhdari
