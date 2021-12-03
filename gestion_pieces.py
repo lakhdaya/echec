@@ -243,9 +243,12 @@ class roi(piece):
         """
         super().actualiser_trajectoire(pieces)
         i = 0
+        rocks = [self.add_rock(pieces, 1, NB_CASE_ECHEC-1), self.add_rock(pieces, -1)]
+        for rock in rocks:
+            if rock:
+                self.trajectoire.append(rock)
         while i < len(self.trajectoire):
             traj = self.trajectoire[i]
-            print("traj : ", traj, self.trajectoire, i, len(self.trajectoire))
             if pieces.en_echec(traj, self.couleur):
                 del self.trajectoire[i]
                 continue
@@ -254,19 +257,11 @@ class roi(piece):
                 if piece:
                     if piece.protege:
                         del self.trajectoire[i]
-                        continue
-                else:
-                    pions = [pieces.rechercher_piece(addition_tuple(traj, (-1, self.couleur*pieces.haut))), pieces.rechercher_piece(addition_tuple(traj, (1, self.couleur*pieces.haut)))]
-                    print("----------------\ntrajectoire : ", traj,pieces.nombre_tour)
-                    for pion in pions:
-                        print("pos pion : ", pion)
-                        if pion and pion.name == "pion" and pion.couleur != self.couleur:
-                            del self.trajectoire[i]
-                            continue
+                        continue                    
             i+=1
-
-    def is_rocking(self, pos_depart):
-        if self.pos()[0]- pos_depart[0] == 2:
+    @staticmethod
+    def is_rocking(pos_depart, pos_arrive):
+        if abs(pos_depart[0]- pos_arrive[0]) == 2:
             return True
         return False
 
@@ -280,23 +275,22 @@ class roi(piece):
                 return True
         return False
 
-    def add_rock(self, pieces):
+    def add_rock(self, pieces, mode = 1, limite = 0):
         """
         Si verif rock alors dorock le roi se deplace alors
         de deux cases
         """
-        t = []
         rock = True
         if self.origin:
-            for x in range(self.x-1, 0, -1):
+            for x in range(self.x+mode, limite, mode):
                 pos = x, self.y
                 if len(pieces.en_echec(pos, self.couleur)) or pieces.rechercher_piece(pos):
                     rock = False
             pos = (0, self.y)
             if self.verif_rock(pos, pieces) and rock:
-                t.append(addition_tuple(self.pos(), (-2, 0)))       
-        return t
-            
+                return addition_tuple(self.pos(), (mode*2, 0))    
+        return None  
+              
 class reine(piece):
     def __init__(self, x:int, y:int, couleur):
         super().__init__(x, y, couleur)
@@ -507,6 +501,11 @@ class pieces():
             if pos in piece.trajectoire and piece.couleur != couleur:
                 if piece.couleur != couleur and (piece.name != "pion" or piece.x != pos[0]):#rajouter traj diago des pions
                     pieces_attaquantes.append(piece)
+            else:
+                pions = [self.rechercher_piece(addition_tuple(pos, (-1, couleur*self.haut))), self.rechercher_piece(addition_tuple(pos, (1, couleur*self.haut)))]
+                for pion in pions:
+                    if pion and pion.name == "pion" and pion.couleur != couleur:
+                        pieces_attaquantes.append(pion)                        
         return pieces_attaquantes
 
     def counter_en_echec(self, pos:tuple, piece:piece, piece_attaque:piece, couleur:int):

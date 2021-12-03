@@ -62,7 +62,7 @@ class echiquier(): #ecran du jeu
     def dessiner_trajectoires(self, piece:piece) -> None:
         for traj in piece.trajectoire:
             x, y = self.case_vers_pixel(traj)
-            pygame.draw.rect(self.fenetre, COULEUR_TRAJECTOIRE, pygame.Rect(x, y, self.taille_case, self.taille_case))
+            pygame.draw.circle(self.fenetre, COULEUR_TRAJECTOIRE, pygame.Vector2(x+self.taille_case//2, y+self.taille_case//2), self.taille_case//2-PADDING_TRAJECTOIRE)
 
     def dessiner_pieces(self, pieces, exception:piece = None) -> None:
         """
@@ -91,10 +91,10 @@ class echiquier(): #ecran du jeu
         """
         pygame.time.wait(self.fpms)
         self.dessiner_ecran(gui)
-        self.dessiner_pieces(pieces, exception)
         if exception:
             self.dessiner_trajectoires(exception)
             self.dessiner_piece(exception, 1)
+        self.dessiner_pieces(pieces, exception)
         pygame.time.wait(self.fpms)
         pygame.display.flip()
         
