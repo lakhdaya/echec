@@ -67,7 +67,7 @@ class piece():
         return False
 
     def __str__(self):
-        return "(" + str(self.x) + ", " + str(self.y ) + str(self.couleur) + ")"
+        return "nom : " + self.name + "(" + str(self.x) + ", " + str(self.y ) + "," + str(self.couleur) + ")"
 
     def __eq__(self, other):
         """
@@ -163,7 +163,6 @@ class piece():
         if self.pos_dans_trajectoire(pos): # and piece_selec.couleur == tour: #a rajjouter pour le tour par tour
             self.mouv(pos)
             piece = self.manger_piece(pieces)
-            self.actualiser_trajectoire(pieces)
             pieces.actualiser_trajectoires()  
         return piece
 
@@ -243,21 +242,28 @@ class roi(piece):
         Verifie si la trajectoire est possible sans que le roi soit menacé
         """
         super().actualiser_trajectoire(pieces)
-        for i, traj in enumerate(self.trajectoire):
+        i = 0
+        while i < len(self.trajectoire):
+            traj = self.trajectoire[i]
+            print("traj : ", traj, self.trajectoire, i, len(self.trajectoire))
             if pieces.en_echec(traj, self.couleur):
                 del self.trajectoire[i]
-                i-=1
+                continue
             else:
                 piece = pieces.rechercher_piece(traj)
                 if piece:
                     if piece.protege:
                         del self.trajectoire[i]
+                        continue
                 else:
                     pions = [pieces.rechercher_piece(addition_tuple(traj, (-1, self.couleur*pieces.haut))), pieces.rechercher_piece(addition_tuple(traj, (1, self.couleur*pieces.haut)))]
+                    print("----------------\ntrajectoire : ", traj,pieces.nombre_tour)
                     for pion in pions:
+                        print("pos pion : ", pion)
                         if pion and pion.name == "pion" and pion.couleur != self.couleur:
                             del self.trajectoire[i]
-
+                            continue
+            i+=1
 
     def is_rocking(self, pos_depart):
         if self.pos()[0]- pos_depart[0] == 2:
