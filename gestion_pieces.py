@@ -193,8 +193,9 @@ class pion(piece):
         """
         Promotion du pion si possible, choix a faire graphiquement ?
         """
-        if self.y%(NB_CASE_ECHEC-1) == 0:
+        if not self.y%(NB_CASE_ECHEC-1):
             return True
+        return False
             
     def actualiser_trajectoire(self, pieces):
         """
@@ -311,7 +312,7 @@ class pieces():
         self.haut = haut
         self.historique = []
         self.pieces_manges = {}
-        self.tour_joueur = 1
+        self.tour_joueur = -1
         self.nombre_tour = -1
         
     def changement_tour(self, arriere = 1):

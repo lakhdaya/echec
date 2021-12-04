@@ -36,6 +36,9 @@ class bouton():
         else:
             self.fonction(pieces)
 
+class timer():
+    pass
+
 class GUI():
     def __init__(self, boutons):
         self.boutons = boutons

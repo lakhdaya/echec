@@ -19,12 +19,19 @@ Fichier main
 
 Choix des positions blancs : 1 = haut, -1 = bas
 """
+
+def temps():
+    minute, seconde = pygame.time.get_ticks()//(1000*60), (pygame.time.get_ticks()//1000)%60
+    return minute, seconde
+
 def main():
     fin_de_partie = 0
     haut = -1
+    limite = 5
+
 
     #création echiquier
-    pieces = gestion_fichier.lecture_fichier_FEN(gestion_fichier.ouverture_fichier(FICHIER), haut)
+    pieces = gestion_fichier.lecture_fichier_FEN(FICHIER, haut)
     echec = graph.echiquier()
 
     #creatoin du gui    
