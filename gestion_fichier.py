@@ -1,4 +1,4 @@
-from constante import FICHIER, NB_CASE_ECHEC, TAILLE_CASE, TRADUCTION_OBJET_FILE
+from constante import FICHIER, NB_CASE_ECHEC, SETUP_BASE, TAILLE_CASE, TRADUCTION_OBJET_FILE
 import gestion_pieces
 #rappel : 
 # fichier fen selon convention international avec acronyme traduit en francais AUSSI majuscul = blanc et minuscule = noir
@@ -25,6 +25,12 @@ def positionner_pieces(disposition_pieces:list(), pieces:gestion_pieces.pieces, 
             except:
                 pieces.creer_piece(case, x+avance, y)
 
+def ajouter_historique(pieces:gestion_pieces.pieces, historique:int):
+    for coup in historique.split("\n")[1:-1]:
+        pieces.historique.append(coup)
+    for i in range(len(pieces.historique)):
+        pieces.jouer_coup()
+
 def lecture_fichier_FEN(nom_fichier, haut:int) -> gestion_pieces.pieces:
     """
     Créé l'objet pieces à partie d'un fichier .FEN respectant les
@@ -33,10 +39,13 @@ def lecture_fichier_FEN(nom_fichier, haut:int) -> gestion_pieces.pieces:
     #question fonction dans pieces ou dans le fichier gestion_fichier ?
     """
     with open(nom_fichier) as file:
-        pieces = gestion_pieces.pieces(haut, [])
-        disposition_pieces = file.read().split("\\")
-        positionner_pieces(disposition_pieces, pieces, haut)
-        return pieces
+        with open(SETUP_BASE) as base:
+            pieces = gestion_pieces.pieces(haut, [])
+            disposition_pieces = file.read().split("\\")
+            base = base.read().split("\\")
+            positionner_pieces(base, pieces, haut)
+            ajouter_historique(pieces, disposition_pieces[-1])
+            return pieces
 
 
 """

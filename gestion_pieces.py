@@ -47,25 +47,6 @@ class piece():
         self.trajectoire = []
         self.protege = False
 
-    def trajectoire_vide(self):
-        """
-        Regarde si les trajectoires que peut prendre la piece
-        existe
-        """
-        for traj in self.trajectoire:
-            if traj != None:
-                return False
-        return True
-
-    def pos_dans_trajectoire(self, pos):
-        """
-        Regarde si une position est dans la trajectoire de la piece
-        """
-        for p in self.trajectoire:
-            if p == pos:
-                return True
-        return False
-
     def __str__(self):
         return "nom : " + self.name + "(" + str(self.x) + ", " + str(self.y ) + "," + str(self.couleur) + ")"
 
@@ -89,7 +70,7 @@ class piece():
         self.x, self.y = pos
         
 
-    def pos(self):
+    def get_pos(self):
         """"
         Get position of object
         """
@@ -99,7 +80,7 @@ class piece():
         """
         Verifie si la piece est sur une piece si oui elle le "mange"
         """
-        ps = pieces.rechercher_pieces(self.pos())
+        ps = pieces.rechercher_pieces(self.get_pos())
         for p in ps:
             if p.couleur != self.couleur:
                 pieces.supprimer_piece(p)
@@ -118,12 +99,25 @@ class piece():
             else:
                 p.protege = True
 
+    def trajectoire_vide(self):
+        """
+        Regarde si les trajectoires que peut prendre la piece
+        existe
+        """
+        return len(self.trajectoire)
+
+    def pos_dans_trajectoire(self, pos):
+        """
+        Regarde si une position est dans la trajectoire de la piece
+        """
+        return pos in self.trajectoire
+
     def trajectoire_avec_obstacle(self, pieces, direction):
         """
         Creer la trajectoire selon la direction et verifie si elle est possible
         """
         t = []
-        pos = addition_tuple(self.pos(), direction)
+        pos = addition_tuple(self.get_pos(), direction)
         while pieces.dedans(pos) and not pieces.rechercher_piece(pos):
             t.append(pos)
             pos = addition_tuple(direction, pos)
@@ -134,7 +128,7 @@ class piece():
         """
         Creer la trajectoire selon la position et everifie si cc'est possible
         """
-        pos = addition_tuple(self.pos(), pos)
+        pos = addition_tuple(self.get_pos(), pos)
         if pieces.dedans(pos):
             p = pieces.rechercher_piece(pos)
             if p:
@@ -150,7 +144,9 @@ class piece():
         """
         self.trajectoire = []
         for pos in self.direction_avec_obstacle:
-            self.trajectoire+=self.trajectoire_avec_obstacle(pieces, pos)
+            traj = self.trajectoire_avec_obstacle(pieces, pos)
+            if traj:
+                self.trajectoire+=traj
         so = [self.trajectoire_sans_obstacle(pieces, pos) 
         for pos in self.direction_sans_obstacle if self.trajectoire_sans_obstacle(pieces, pos) != None]
         if len(so):
@@ -169,14 +165,6 @@ class piece():
     def can_mouv_here(self, pos_arrive:tuple):
         return pos_arrive in self.trajectoire
 
-
-    def plus_origin(self, pieces):
-        """
-        Permet de considerer hypothetiquepment que la piece n'est plus protege
-        """
-        self.origin = False
-        self.actualiser_trajectoire(pieces)
-
 """
 Ici les objet permettent de decrire chaque piece des echecs
 """
@@ -189,11 +177,15 @@ class pion(piece):
         self.origin = True
         self.direction_sans_obstacle = [multiplier_tuple(DIRECTIONS["N"], self.haut*self.couleur), multiplier_tuple((0, 2), self.haut*self.couleur)]
 
-    def promotion(self):
+    def promotion(self, pos_arrive):
         """
         Promotion du pion si possible, choix a faire graphiquement ?
         """
         if not self.y%(NB_CASE_ECHEC-1):
+            print("choisissez la pieces : ")
+            nom_piece = input()
+            pieces.supprimer_piece(piece)
+            pieces.creer_piece(nom_piece, pos_arrive[0], pos_arrive[1])
             return True
         return False
             
@@ -203,33 +195,14 @@ class pion(piece):
         donc on réecrit la fonction pour actualiser la trajectoire selon cette regle
         """
         self.trajectoire = []
-        traj = [addition_tuple(self.pos(), self.direction_sans_obstacle[0]), addition_tuple(self.pos(), self.direction_sans_obstacle[1])]
+        traj = [addition_tuple(self.get_pos(), self.direction_sans_obstacle[0]), addition_tuple(self.get_pos(), self.direction_sans_obstacle[1])]
         if (self.y == 1 and self.couleur*self.haut == 1) or (self.y == 6 and self.couleur*self.haut == -1):
             if not pieces.rechercher_piece(traj[0]) and not pieces.rechercher_piece(traj[1]):
                 self.trajectoire.append(traj[1])
         if not pieces.rechercher_piece(traj[0]):
             self.trajectoire.append(traj[0])
-        self.rajout_derniere_case(self.trajectoire, pieces, addition_tuple(self.pos(), (1, self.couleur*self.haut)))
-        self.rajout_derniere_case(self.trajectoire, pieces, addition_tuple(self.pos(), (-1, self.couleur*self.haut)))
-
-class tour(piece):
-    def __init__(self, x = 0, y = 0, couleur = 1):
-        super().__init__(x, y, couleur, haut = 1)
-        self.name = "tour"
-        self.direction_avec_obstacle = LIGNES
-
-
-class fou(piece):
-    def __init__(self, x, y, couleur):
-        super().__init__(x, y, couleur, haut = 1)
-        self.name = "fou"
-        self.direction_avec_obstacle = DIAGONALES
-
-class cavalier(piece):
-    def __init__(self, x, y, couleur):
-        super().__init__(x, y, couleur, haut = 1)
-        self.name = "cheval"
-        self.direction_sans_obstacle = CHEVAL
+        self.rajout_derniere_case(self.trajectoire, pieces, addition_tuple(self.get_pos(), (1, self.couleur*self.haut)))
+        self.rajout_derniere_case(self.trajectoire, pieces, addition_tuple(self.get_pos(), (-1, self.couleur*self.haut)))
 
 class roi(piece):
     def __init__(self, x:int, y:int, couleur:int):
@@ -238,14 +211,36 @@ class roi(piece):
         self.rock = True
         self.direction_sans_obstacle = list(DIRECTIONS.values())
 
+    def verif_rock(self, pos, pieces):
+        """ 
+        Verifie si le roi peut rock
+        """
+        piece = pieces.rechercher_piece(pos)
+        if piece:
+            if piece.name == "tour" and piece.couleur == self.couleur and piece.origin:
+                return True
+        return False
+
+    def add_rock(self, pieces, mode = 1, limite = 0):
+        """
+        Si verif rock alors dorock le roi se deplace alors
+        de deux cases
+        """
+        for x in range(self.x+mode, limite, mode):
+            pos = x, self.y
+            if len(pieces.en_echec(pos, self.couleur)) or pieces.rechercher_piece(pos):
+                return None
+        if self.verif_rock((limite, self.y), pieces):
+            return addition_tuple(self.get_pos(), (mode*2, 0))    
+        return None
+
     def actualiser_trajectoire(self, pieces):
         """
         Verifie si la trajectoire est possible sans que le roi soit menacé
         """
         super().actualiser_trajectoire(pieces)
         i = 0
-        rocks = [self.add_rock(pieces, 1, NB_CASE_ECHEC-1), self.add_rock(pieces, -1)]
-        for rock in rocks:
+        for rock in [self.add_rock(pieces, 1, NB_CASE_ECHEC-1), self.add_rock(pieces, 1, 0)]:
             if rock:
                 self.trajectoire.append(rock)
         while i < len(self.trajectoire):
@@ -266,37 +261,33 @@ class roi(piece):
             return True
         return False
 
-    def verif_rock(self, pos, pieces):
-        """
-        Verifie si le roi peut rock
-        """
-        piece = pieces.rechercher_piece(pos)
-        if piece:
-            if piece.name == "tour" and piece.couleur == self.couleur and piece.origin:
-                return True
-        return False
+class tour(piece):
+    def __init__(self, x = 0, y = 0, couleur = 1):
+        super().__init__(x, y, couleur, haut = 1)
+        self.name = "tour"
+        self.direction_avec_obstacle = LIGNES
 
-    def add_rock(self, pieces, mode = 1, limite = 0):
-        """
-        Si verif rock alors dorock le roi se deplace alors
-        de deux cases
-        """
-        rock = True
-        if self.origin:
-            for x in range(self.x+mode, limite, mode):
-                pos = x, self.y
-                if len(pieces.en_echec(pos, self.couleur)) or pieces.rechercher_piece(pos):
-                    rock = False
-            pos = (0, self.y)
-            if self.verif_rock(pos, pieces) and rock:
-                return addition_tuple(self.pos(), (mode*2, 0))    
-        return None  
-              
+
+class fou(piece):
+    def __init__(self, x, y, couleur):
+        super().__init__(x, y, couleur, haut = 1)
+        self.name = "fou"
+        self.direction_avec_obstacle = DIAGONALES
+
+class cavalier(piece):
+    def __init__(self, x, y, couleur):
+        super().__init__(x, y, couleur, haut = 1)
+        self.name = "cheval"
+        self.direction_sans_obstacle = CHEVAL
+
 class reine(piece):
     def __init__(self, x:int, y:int, couleur):
         super().__init__(x, y, couleur)
         self.name = "reine"
         self.direction_avec_obstacle = LIGNES + DIAGONALES
+
+
+
 
 class pieces():
     """
@@ -312,9 +303,36 @@ class pieces():
         self.haut = haut
         self.historique = []
         self.pieces_manges = {}
-        self.tour_joueur = -1
+        self.tour_joueur = 1
         self.nombre_tour = -1
         
+    def __str__(self) -> str:
+        """
+        Return toutes les pieces sous forme pos, couleur dans la liste piece
+        """
+        for piece in self.liste_pieces:
+            print(piece)
+        return "Pieces"
+
+    def __contains__(self, piece:piece):
+        """
+        Verifie la presence d'une piece dans l'echiquier
+        """
+        if piece in self.liste_pieces:
+            return True
+        return False
+
+    def dedans(self, pos:tuple):
+        """
+        Verifie si une piece est dans lechiquier
+        """
+        x, y = pos
+        if x  >= 0 and x< NB_CASE_ECHEC:
+            return y >= 0 and y < NB_CASE_ECHEC
+        return False
+
+#gestion tour
+
     def changement_tour(self, arriere = 1):
         self.nombre_tour+=(1*arriere)
         self.tour_joueur*=-1
@@ -325,12 +343,14 @@ class pieces():
     def get_nombre_tour(self):
         return self.nombre_tour
 
+#recherche des pieces
+
     def rechercher_piece(self, pos:tuple):
         """
         Recherche unique piece sur une position (x, y) donné
         """
         for piece in self.liste_pieces:
-            if piece.pos() == pos:
+            if piece.get_pos() == pos:
                 return piece
         return None
 
@@ -348,10 +368,12 @@ class pieces():
         """
         ps = []
         for piece in self.liste_pieces:
-            if piece.pos() == pos:
+            if piece.get_pos() == pos:
                 ps.append(piece)
         return ps
     
+#gestion des pieces
+
     def creer_piece(self, nom_piece:str, x:int, y:int):
         """
         Créer piece selon le nom et la pos donné (x, y) et le nom
@@ -389,30 +411,17 @@ class pieces():
         """
         self.liste_pieces.append(piece)
 
+    def ajouter_piece_mange(self, piece):
+        self.pieces_manges[self.nombre_tour] = piece
+
     def supprimer_piece(self, piece):
         """
         Retire une piece de la liste de l'objet pieces
         """
         for i, p in enumerate(self.liste_pieces):
             if p.x == piece.x and p.y == piece.y and p.couleur == piece.couleur:
+                self.ajouter_piece_mange(p)
                 del self.liste_pieces[i]
-        self.pieces_manges[self.nombre_tour] = piece
-
-    def __str__(self) -> str:
-        """
-        Return toutes les pieces sous forme pos, couleur dans la liste piece
-        """
-        for piece in self.liste_pieces:
-            print(piece)
-        return "Pieces"
-
-    def __contains__(self, piece:piece):
-        """
-        Verifie la presence d'une piece dans l'echiquier
-        """
-        if piece in self.liste_pieces:
-            return True
-        return False
 
     def reset_protection(self):
         """
@@ -420,6 +429,20 @@ class pieces():
         """
         for piece in self.liste_pieces:
             piece.protege = False
+
+#gestions des trajectoires des pieces
+
+    def rock(self, roi, pos:tuple):
+        """
+        Bouge la tour pour faire  un rock
+        pos : position de depart
+        Note : fonction de deplacement mis en dehors de la piece concerne car elle
+        en concerne plusieurs
+        """
+        if pos[0] < roi.x:
+            self.rechercher_piece((NB_CASE_ECHEC-1, roi.y)).mouv(addition_tuple(roi.get_pos(), (-1, 0)))
+        else:
+            self.rechercher_piece((0, roi.y)).mouv(addition_tuple(roi.get_pos(), (1, 0)))
     
     def actualiser_trajectoires(self):
         """"
@@ -435,6 +458,14 @@ class pieces():
         for roi in r:
             roi.actualiser_trajectoire(self)
 
+#jeu des coups selon historique
+
+    def ajouter_trajectoire_dans_historique(self, traj:str):
+        if self.get_nombre_tour() >= len(self.historique):
+            self.historique.append(traj)
+        else:
+            self.historique[self.get_nombre_tour()] = traj
+
     @staticmethod
     def traduction_position_norme_echec(position:int):
         return chr(position[0]+97)+str(position[1])
@@ -442,12 +473,6 @@ class pieces():
     @staticmethod
     def traduction_norme_echec_position(position:int):
         return ord(position[0])-97, int(position[1])
-
-    def ajouter_trajectoire_dans_historique(self, traj:tuple):
-        if self.get_nombre_tour() >= len(self.historique):
-            self.historique.append(traj)
-        else:
-            self.historique[self.get_nombre_tour()] = traj
     
     def enregistrer_trajectoire(self, piece:piece, pos_depart:int, pos_arrive:int, piece_mange:piece):
         """
@@ -469,29 +494,27 @@ class pieces():
     def jouer_coup(self):
         if self.get_nombre_tour()+1 < len(self.historique):
             self.changement_tour()
-            piece = self.rechercher_piece(self.traduction_norme_echec_position(self.historique[self.nombre_tour][1:3]))
-            piece.mouv(self.traduction_norme_echec_position(self.historique[self.nombre_tour][4:]))
-            piece.manger_piece(self)
+            piece = self.rechercher_piece(self.traduction_norme_echec_position(self.historique[self.get_nombre_tour()][1:3]))
+            if abs(piece.get_pos()[0] - self.traduction_norme_echec_position(self.historique[self.get_nombre_tour()][4:])[0]) > 1 and piece.name == "roi":
+                pos = piece.get_pos()
+                piece.mouv(self.traduction_norme_echec_position(self.historique[self.get_nombre_tour()][4:]))        
+                self.rock(piece, pos)
+            else:
+                piece.mouv(self.traduction_norme_echec_position(self.historique[self.get_nombre_tour()][4:]))
+                p = piece.manger_piece(self)
             self.actualiser_trajectoires()
 
     def revenir_sur_le_coup(self):
         if self.get_nombre_tour() >= 0:
             if self.historique[self.nombre_tour][3] == "X":
-                self.ajouter_piece(self.pieces_manges[self.nombre_tour-1])
+                self.ajouter_piece(self.pieces_manges[self.nombre_tour])
             piece = self.rechercher_piece(self.traduction_norme_echec_position(self.historique[self.nombre_tour][4:]))
             piece.mouv( self.traduction_norme_echec_position(self.historique[self.nombre_tour][1:3])
             )
             self.actualiser_trajectoires()
             self.changement_tour(-1)
-            
-    def dedans(self, pos:tuple):
-        """
-        Verifie si une piece est dans lechiquier
-        """
-        x, y = pos
-        if x  >= 0 and x< NB_CASE_ECHEC:
-            return y >= 0 and y < NB_CASE_ECHEC
-        return False
+
+#recherche de fin de partie
 
     def en_echec(self, pos:tuple, couleur:int,):
         """
@@ -513,7 +536,7 @@ class pieces():
         """
         Verifie si une piece peut protege une position en echec
         """
-        p = piece.pos()
+        p = piece.get_pos()
         for traj in piece.trajectoire:
             piece.mouv(traj)
             piece_attaque.actualiser_trajectoire(self)
@@ -529,12 +552,12 @@ class pieces():
         """
         Verifie si le roi est en mat ou pas
         """
-        pieces_attaque = self.en_echec(piece.pos(), piece.couleur)
+        pieces_attaque = self.en_echec(piece.get_pos(), piece.couleur)
         if len(pieces_attaque) and not len(piece.trajectoire):
             for p in self.liste_pieces:
                 if p.couleur == piece.couleur:
                     for piece_attaque in pieces_attaque:
-                        if self.counter_en_echec(piece.pos(), p, piece_attaque, piece.couleur):
+                        if self.counter_en_echec(piece.get_pos(), p, piece_attaque, piece.couleur):
                             return False
             return True
         return False
@@ -561,18 +584,5 @@ class pieces():
         else:
             return 0
 
-    def rock(self, roi, pos:tuple):
-        """
-        Bouge la tour pour faire  un rock
-
-        Note : fonction de deplacement mis en dehors de la piece concerne car elle
-        en concerne plusieurs
-        """
-        if pos[0] < roi.x:
-            self.rechercher_piece((NB_CASE_ECHEC-1, roi.y)).mouv(self,
-                addition_tuple(roi.pos(), (-1, 0)))
-        else:
-            self.rechercher_piece((0, roi.y)).mouv(self, 
-                addition_tuple(roi.pos(), (1, 0)))
 
 

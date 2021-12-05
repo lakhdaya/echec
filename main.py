@@ -42,7 +42,6 @@ def main():
     #recherche du roi noir et blanc
     rois = { 1 : pieces.rechercher_piece_nom("roi", 1), -1 : pieces.rechercher_piece_nom("roi", -1)}
 
-
     pieces.actualiser_trajectoires()
     echec.dessiner_gui(gui)
     while True:

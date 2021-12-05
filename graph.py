@@ -12,7 +12,7 @@ class echiquier(): #ecran du jeu
     """
     objet permettant la gestion graphique de tout l'echiquier
     """
-    def __init__(self, NB_CASE_X:int = 8, NB_CASE_Y:int = 8, position_blanc:int = 1) -> None:
+    def __init__(self, NB_CASE_X:int = 8, NB_CASE_Y:int = 8, get_position_blanc:int = 1) -> None:
         pygame.display.init()
         self.name = "echiqiuer"
         self.width = NB_CASE_X #taille en case
@@ -24,14 +24,14 @@ class echiquier(): #ecran du jeu
         self.fenetre = pygame.display.set_mode((self.width*self.taille_case+TAILLE_GUI_X, self.height*self.taille_case+TAILLE_GUI_Y))
         self.dessiner_echiquier()
 
-    def case_vers_pixel(self, pos:tuple) -> tuple:
-        return pos[0]*self.taille_case, pos[1]*self.taille_case
+    def case_vers_pixel(self, get_pos:tuple) -> tuple:
+        return get_pos[0]*self.taille_case, get_pos[1]*self.taille_case
 
-    def pixel_vers_case(self, pos:tuple) -> tuple:
+    def pixel_vers_case(self, get_pos:tuple) -> tuple:
         """
         Conversion de coordonnées en pixel de l'ecran en case du jeu
         """
-        return pos[0]//self.taille_case, pos[1]//self.taille_case
+        return get_pos[0]//self.taille_case, get_pos[1]//self.taille_case
 
     def dessiner_echiquier(self) -> None:
         for y in range(NB_CASE_ECHEC+1):
@@ -49,14 +49,14 @@ class echiquier(): #ecran du jeu
     def dessiner_piece(self, piece:piece, pixel = 0) -> None:
         """
         Dessine une piece selon le nom, 
-        la position donnée en pixel, et la couleur
+        la get_position donnée en pixel, et la couleur
         
         """
         canvas = pygame.transform.scale(pygame.image.load("pieces/"+PATH_PIECE[(piece.name, piece.couleur)]), (TAILLE_CASE-PADDING_PIECE//2, TAILLE_CASE-PADDING_PIECE//2))
         if pixel:
-            self.fenetre.blit(canvas, piece.pos())
+            self.fenetre.blit(canvas, piece.get_pos())
         else:
-            x, y = self.case_vers_pixel(piece.pos())
+            x, y = self.case_vers_pixel(piece.get_pos())
             self.fenetre.blit(canvas, (x+PADDING_PIECE//4,y+PADDING_PIECE//4))
     
     def dessiner_trajectoires(self, piece:piece) -> None:
@@ -98,8 +98,8 @@ class echiquier(): #ecran du jeu
         pygame.time.wait(self.fpms)
         pygame.display.flip()
         
-    def centrer(self, pos):
-        return pos[0]-self.taille_case//2, pos[1]-self.taille_case//2
+    def centrer(self, get_pos):
+        return get_pos[0]-self.taille_case//2, get_pos[1]-self.taille_case//2
 
     def mouse_tracker(self, event, pieces, gui, piece):
         if piece:
@@ -111,5 +111,5 @@ class echiquier(): #ecran du jeu
                 self.refresh(pieces, gui, piece)
         return self.pixel_vers_case(pygame.mouse.get_pos())
 
-    def choix_promotion(self, pos):
+    def choix_promotion(self, get_pos):
         pass

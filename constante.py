@@ -3,6 +3,7 @@ NB_CASE_ECHEC = 8
 
 #fichier a ouvrir : 
 FICHIER = "partie/sauvegarde_test.fen"
+SETUP_BASE = "partie/start_blanc.fen"
 
 #TRADUCTION objet --> file : 
 TRADUCTION_OBJET_FILE = PATH_PIECE = {("reine", 1) : "q", ("roi", 1) : "k", ("tour", 1) : "t", 
