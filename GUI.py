@@ -1,16 +1,22 @@
 
 from constante import POSITION_BOUTON_ARRIERE, POSITION_BOUTON_AVANT, TAILLE_BOUTON_ARRIERE, POSITION_BOUTON_SAUVEGARDE, TAILLE_BOUTON_AVANT, TAILLE_BOUTON_SAUVEGARDE
 from gestion_fichier import sauvegarder_partie
-from gestion_pieces import pieces
+from gestion_pieces import Pieces
 
 def creer_dico(position, taille, fonction, argument):
+    """
+    Creer un dictionnaire pour un bouton
+    """
     return {"Position" : position, "Taille" : taille, "Fonction" : fonction, "Arguments" : argument}
 
-BOUTONS = {"Sauvegarder" : creer_dico(POSITION_BOUTON_SAUVEGARDE, TAILLE_BOUTON_SAUVEGARDE, sauvegarder_partie, None), 
-"Retour arriere" : creer_dico(POSITION_BOUTON_ARRIERE, TAILLE_BOUTON_ARRIERE, pieces.revenir_sur_le_coup, None),
-"Retour avant" : creer_dico(POSITION_BOUTON_AVANT, TAILLE_BOUTON_AVANT, pieces.jouer_coup, None)}
+BOUTONS = {"Sauvegarder" : creer_dico(POSITION_BOUTON_SAUVEGARDE, TAILLE_BOUTON_SAUVEGARDE, sauvegarder_partie, None),
+"Retour arriere" : creer_dico(POSITION_BOUTON_ARRIERE, TAILLE_BOUTON_ARRIERE, Pieces.revenir_sur_le_coup, None),
+"Retour avant" : creer_dico(POSITION_BOUTON_AVANT, TAILLE_BOUTON_AVANT, Pieces.jouer_coup, None)}
 
-class bouton():
+class Bouton():
+    """
+    Bouton affichier dans l'interface utilisateur
+    """
     def __init__(self, name, pos, taille, fonction, param):
         self.name = name
         self.pos = pos
@@ -36,14 +42,17 @@ class bouton():
         else:
             self.fonction(pieces)
 
-class timer():
+class Timer():
     pass
 
-class GUI():
+class Gui():
+    """
+    Interface utilisateur qui entour l'echiquier
+    """
     def __init__(self, boutons):
         self.boutons = boutons
 
-    def click_sur_bouton(self, pos:tuple, pieces:pieces):
+    def click_sur_bouton(self, pos:tuple, pieces:Pieces):
         for bouton in self.boutons:
             if bouton.dedans(pos):
                 bouton.activer_bouton(pieces)
@@ -53,3 +62,11 @@ class GUI():
             if bouton.name == name:
                 return bouton
         return None
+
+
+if __name__ == "__main__":
+    #disable des no member car probleme avec pygame
+    import pylint.lint
+    pylint_opts = ['--disable=trailing-whitespace', '--disable=no-member', '--disable=line-too-long', __file__]
+    pylint.lint.Run(pylint_opts)
+    

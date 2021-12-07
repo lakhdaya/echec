@@ -1,40 +1,43 @@
-from constante import *
 """
-Fichier permettant la gestion de toutes les pieces au niveau backend
-
+Permet la gestion de toutes les pieces au niveau backend
+Gère la partie d'echec et les mouvements de spieces
+Detecte aussi la fin de la partie ou pas
 """
 
-def addition_tuple(t1:tuple, t2:tuple) -> tuple:
+from constante import CHEVAL, DIAGONALES, DIRECTIONS, LIGNES, NB_CASE_ECHEC, TRADUCTION_OBJET_FILE
+
+
+def addition_tuple(tuple_1:tuple(), tuple_2:tuple()) -> tuple:
     """
     Addtionne les valeurs d'un tuple de dim2
-    Rq peut se generaliser pour n dimension 
+    Rq peut se generaliser pour n dimension
     mais inutile ici
 
     """
-    x, y = t1
-    x1, y1 = t2
+    x, y = tuple_1
+    x1, y1 = tuple_2
     return (x+x1, y+y1)
 
-def multiplier_tuple(t:(tuple), val:int) -> tuple:
+def multiplier_tuple(tuple:tuple, val:int) -> tuple:
     """
     Multiple le valeur d'un tuple de dim2
-    Rq peut se generaliser pour n dimension 
+    Rq peut se generaliser pour n dimension
     mais inutile ici
     """
-    x, y = t
+    x, y = tuple
     return (x*val, y*val)
 
-class piece():
+class Piece():
     """
     Caracterise une piece de l'echiquier
     x --> position en x
     y --> position en y
     origin --> piece a deja bouge ou pas
-    direction_avec_obstacle --> la direction que peut prendre une piece en 
+    direction_avec_obstacle --> la direction que peut prendre une piece en
     prenant en compte les autres pieces
-    direction_sans_obstacle --> les endroit ou peut aller 
+    direction_sans_obstacle --> les endroit ou peut aller
     la piece selon la position
-    protege --> regarde si un piece la protege 
+    protege --> regarde si un piece la protege
     """
     def __init__(self, x = 0, y = 0, couleur = 1, haut:int = 1):
         self.couleur = couleur #1 pour blanc ,-1 pour noir pour aller de l'avant ou arriere ( noir en bas blanc en haut)# 1 haut donc ...#-1 bas donc ...
@@ -47,28 +50,11 @@ class piece():
         self.trajectoire = []
         self.protege = False
 
-    def __str__(self):
-        return "nom : " + self.name + "(" + str(self.x) + ", " + str(self.y ) + "," + str(self.couleur) + ")"
-
-    def __eq__(self, other):
-        """
-        Compare la position de deux piece
-        """
-        if other == None:
-            return False
-        if self.x == other.x:
-            return self.y == other.y
-        return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
     def mouv(self, pos):
         """
         Place la piece a l'endroit pos
         """
         self.x, self.y = pos
-        
 
     def get_pos(self):
         """"
@@ -80,11 +66,11 @@ class piece():
         """
         Verifie si la piece est sur une piece si oui elle le "mange"
         """
-        ps = pieces.rechercher_pieces(self.get_pos())
-        for p in ps:
-            if p.couleur != self.couleur:
-                pieces.supprimer_piece(p)
-                return p
+        pieces_manges = pieces.rechercher_pieces(self.get_pos())
+        for piece_mange in pieces_manges:
+            if piece_mange.couleur != self.couleur:
+                pieces.supprimer_piece(piece_mange)
+                return piece_mange
         return None
 
     def rajout_derniere_case(self, traj, pieces, pos):
@@ -95,16 +81,9 @@ class piece():
         p = pieces.rechercher_piece(pos)
         if p:
             if p.couleur != self.couleur:
-                traj.append(pos) 
+                traj.append(pos)
             else:
                 p.protege = True
-
-    def trajectoire_vide(self):
-        """
-        Regarde si les trajectoires que peut prendre la piece
-        existe
-        """
-        return len(self.trajectoire)
 
     def pos_dans_trajectoire(self, pos):
         """
@@ -147,8 +126,8 @@ class piece():
             traj = self.trajectoire_avec_obstacle(pieces, pos)
             if traj:
                 self.trajectoire+=traj
-        so = [self.trajectoire_sans_obstacle(pieces, pos) 
-        for pos in self.direction_sans_obstacle if self.trajectoire_sans_obstacle(pieces, pos) != None]
+        so = [self.trajectoire_sans_obstacle(pieces, pos)
+        for pos in self.direction_sans_obstacle if self.trajectoire_sans_obstacle(pieces, pos) is not None]
         if len(so):
             self.trajectoire+=so
 
@@ -170,25 +149,51 @@ Ici les objet permettent de decrire chaque piece des echecs
 """
 
 
-class pion(piece):
+class Pion(Piece):
     def __init__(self, x:int = 0, y:int = 0, couleur:int = 1, tour:int = 1):
-        super().__init__(x, y, couleur, tour)    
+        super().__init__(x, y, couleur, tour)
         self.name = "pion"
         self.origin = True
         self.direction_sans_obstacle = [multiplier_tuple(DIRECTIONS["N"], self.haut*self.couleur), multiplier_tuple((0, 2), self.haut*self.couleur)]
-
-    def promotion(self, pos_arrive):
+        self.pion_passant = False
+    def promotion(self, pieces, pos_arrive):
         """
         Promotion du pion si possible, choix a faire graphiquement ?
         """
         if not self.y%(NB_CASE_ECHEC-1):
             print("choisissez la pieces : ")
             nom_piece = input()
-            pieces.supprimer_piece(piece)
+            pieces.supprimer_piece(self)
             pieces.creer_piece(nom_piece, pos_arrive[0], pos_arrive[1])
             return True
         return False
-            
+
+
+    def is_pion_passant(self, pos_depart):
+        """
+        Detecte si lors de son déplacement
+        le pion est passant.
+        """
+        if abs(self.y-pos_depart[1])==2:
+            return True
+        return False
+
+    def can_eat_pion_passant(self, pieces):
+        """
+        Verifie si le pion peut manger un pion
+        passant a cote de lui.
+        """
+        trajectoires = [addition_tuple(self.get_pos(),
+        addition_tuple(DIRECTIONS["E"], self.direction_sans_obstacle[0])),
+        addition_tuple(self.get_pos(),
+        addition_tuple(DIRECTIONS["W"], self.direction_sans_obstacle[0]))]
+        pions_passants = [pieces.rechercher_piece(trajectoire) for trajectoire in
+        trajectoires]
+        for pion_passant in pions_passants:
+            if pion_passant:
+                if pion_passant.name == "pion" and pion_passant.pion_passant:
+                    self.trajectoire.append(addition_tuple(pion_passant.get_pos(), self.direction_sans_obstacle[0]))
+
     def actualiser_trajectoire(self, pieces):
         """
         Pion special car peut manger les diagonales et ne peut pas manger tout droit
@@ -196,6 +201,7 @@ class pion(piece):
         """
         self.trajectoire = []
         traj = [addition_tuple(self.get_pos(), self.direction_sans_obstacle[0]), addition_tuple(self.get_pos(), self.direction_sans_obstacle[1])]
+        self.can_eat_pion_passant(pieces)
         if (self.y == 1 and self.couleur*self.haut == 1) or (self.y == 6 and self.couleur*self.haut == -1):
             if not pieces.rechercher_piece(traj[0]) and not pieces.rechercher_piece(traj[1]):
                 self.trajectoire.append(traj[1])
@@ -204,7 +210,8 @@ class pion(piece):
         self.rajout_derniere_case(self.trajectoire, pieces, addition_tuple(self.get_pos(), (1, self.couleur*self.haut)))
         self.rajout_derniere_case(self.trajectoire, pieces, addition_tuple(self.get_pos(), (-1, self.couleur*self.haut)))
 
-class roi(piece):
+
+class Roi(Piece):
     def __init__(self, x:int, y:int, couleur:int):
         super().__init__(x, y, couleur)
         self.name = "roi"
@@ -261,26 +268,26 @@ class roi(piece):
             return True
         return False
 
-class tour(piece):
+class Tour(Piece):
     def __init__(self, x = 0, y = 0, couleur = 1):
         super().__init__(x, y, couleur, haut = 1)
         self.name = "tour"
         self.direction_avec_obstacle = LIGNES
 
 
-class fou(piece):
+class Fou(Piece):
     def __init__(self, x, y, couleur):
         super().__init__(x, y, couleur, haut = 1)
         self.name = "fou"
         self.direction_avec_obstacle = DIAGONALES
 
-class cavalier(piece):
+class Cavalier(Piece):
     def __init__(self, x, y, couleur):
         super().__init__(x, y, couleur, haut = 1)
         self.name = "cheval"
         self.direction_sans_obstacle = CHEVAL
 
-class reine(piece):
+class Reine(Piece):
     def __init__(self, x:int, y:int, couleur):
         super().__init__(x, y, couleur)
         self.name = "reine"
@@ -289,7 +296,7 @@ class reine(piece):
 
 
 
-class pieces():
+class Pieces():
     """
     Decrit l'echiquier niveau backend, on pourrait utiliser unne
     liste mais a trme on veut stocker dautres parametres : 
@@ -314,7 +321,7 @@ class pieces():
             print(piece)
         return "Pieces"
 
-    def __contains__(self, piece:piece):
+    def __contains__(self, piece:Piece):
         """
         Verifie la presence d'une piece dans l'echiquier
         """
@@ -322,13 +329,14 @@ class pieces():
             return True
         return False
 
-    def dedans(self, pos:tuple):
+    @staticmethod
+    def dedans(pos:tuple):
         """
         Verifie si une piece est dans lechiquier
         """
-        x, y = pos
-        if x  >= 0 and x< NB_CASE_ECHEC:
-            return y >= 0 and y < NB_CASE_ECHEC
+        x, y=pos
+        if 0 <= x < NB_CASE_ECHEC:
+            return 0 <= y < NB_CASE_ECHEC
         return False
 
 #gestion tour
@@ -361,7 +369,8 @@ class pieces():
         for piece in self.liste_pieces:
             if piece.name == nom and piece.couleur == couleur:
                 return piece
-        
+        return None
+
     def rechercher_pieces(self, pos:tuple):
         """
         Recherche toutes les pieces sur la position (x, y) donné
@@ -381,38 +390,29 @@ class pieces():
         """
         #peut etre autre maniere moins redondante ???
         if nom_piece == "p":
-            self.liste_pieces.append(pion(x, y, 1, self.haut))
+            self.liste_pieces.append(Pion(x, y, 1, self.haut))
         elif nom_piece == "P":
-            self.liste_pieces.append(pion(x, y, -1, self.haut))
+            self.liste_pieces.append(Pion(x, y, -1, self.haut))
         elif nom_piece == "t":
-            self.liste_pieces.append(tour(x, y, 1))
+            self.liste_pieces.append(Tour(x, y, 1))
         elif nom_piece == "T":
-            self.liste_pieces.append(tour(x, y, -1))
+            self.liste_pieces.append(Tour(x, y, -1))
         elif nom_piece == "f":
-            self.liste_pieces.append(fou(x, y, 1))
+            self.liste_pieces.append(Fou(x, y, 1))
         elif nom_piece == "F":
-            self.liste_pieces.append(fou(x, y, -1))
+            self.liste_pieces.append(Fou(x, y, -1))
         elif nom_piece == "c":
-            self.liste_pieces.append(cavalier(x, y, 1))
+            self.liste_pieces.append(Cavalier(x, y, 1))
         elif nom_piece == "C":
-            self.liste_pieces.append(cavalier(x, y, -1))
+            self.liste_pieces.append(Cavalier(x, y, -1))
         elif nom_piece == "K":
-            self.liste_pieces.append(roi(x, y, -1))
+            self.liste_pieces.append(Roi(x, y, -1))
         elif nom_piece == "k":
-            self.liste_pieces.append(roi(x, y, 1))
+            self.liste_pieces.append(Roi(x, y, 1))
         elif nom_piece == "Q":
-            self.liste_pieces.append(reine(x, y, -1))
+            self.liste_pieces.append(Reine(x, y, -1))
         elif nom_piece == "q":
-            self.liste_pieces.append(reine(x, y, 1))
-    
-    def ajouter_piece(self, piece):
-        """
-        Rajoute une piece a la liste de piece
-        """
-        self.liste_pieces.append(piece)
-
-    def ajouter_piece_mange(self, piece):
-        self.pieces_manges[self.nombre_tour] = piece
+            self.liste_pieces.append(Reine(x, y, 1))
 
     def supprimer_piece(self, piece):
         """
@@ -420,15 +420,9 @@ class pieces():
         """
         for i, p in enumerate(self.liste_pieces):
             if p.x == piece.x and p.y == piece.y and p.couleur == piece.couleur:
-                self.ajouter_piece_mange(p)
+                self.pieces_manges[self.nombre_tour] = piece
                 del self.liste_pieces[i]
 
-    def reset_protection(self):
-        """
-        Eneleve la protection sur toutes les pieces
-        """
-        for piece in self.liste_pieces:
-            piece.protege = False
 
 #gestions des trajectoires des pieces
 
@@ -448,7 +442,8 @@ class pieces():
         """"
         Actualise les trajectoires de toutes les pieces
         """
-        self.reset_protection()
+        for piece in self.liste_pieces:
+            piece.protege = False
         r = []
         for piece in self.liste_pieces:
             if piece.name == "roi":
@@ -458,7 +453,7 @@ class pieces():
         for roi in r:
             roi.actualiser_trajectoire(self)
 
-#jeu des coups selon historique
+#jeu des coups selon historique  
 
     def ajouter_trajectoire_dans_historique(self, traj:str):
         if self.get_nombre_tour() >= len(self.historique):
@@ -474,7 +469,7 @@ class pieces():
     def traduction_norme_echec_position(position:int):
         return ord(position[0])-97, int(position[1])
     
-    def enregistrer_trajectoire(self, piece:piece, pos_depart:int, pos_arrive:int, piece_mange:piece):
+    def enregistrer_trajectoire(self, piece:Piece, pos_depart:int, pos_arrive:int, piece_mange:Piece):
         """
         enregistre le coup fait en format coonventionel
         """
@@ -505,12 +500,18 @@ class pieces():
             self.actualiser_trajectoires()
 
     def revenir_sur_le_coup(self):
-        if self.get_nombre_tour() >= 0:
+        if self.get_nombre_tour() >= 0:   
+            pos_avant =  self.historique[self.nombre_tour][4:]
+            piece = self.rechercher_piece(self.traduction_norme_echec_position(pos_avant))
+            
             if self.historique[self.nombre_tour][3] == "X":
-                self.ajouter_piece(self.pieces_manges[self.nombre_tour])
-            piece = self.rechercher_piece(self.traduction_norme_echec_position(self.historique[self.nombre_tour][4:]))
-            piece.mouv( self.traduction_norme_echec_position(self.historique[self.nombre_tour][1:3])
-            )
+                self.liste_pieces.append(self.pieces_manges[self.nombre_tour])
+            elif piece.get_pos()[0] - self.traduction_norme_echec_position(pos_avant)[0] > 1 and piece.name == "roi":
+                self.rechercher_piece((piece.get_pos()[0], pos_avant[1]))
+            elif piece.get_pos()[0] - self.traduction_norme_echec_position(pos_avant)[0] < 1 and piece.name == "roi":
+                self.rechercher_piece((self.get_pos[0], pos_avant[1]))
+        
+            piece.mouv( self.traduction_norme_echec_position(self.historique[self.nombre_tour][1:3]))
             self.actualiser_trajectoires()
             self.changement_tour(-1)
 
@@ -532,7 +533,7 @@ class pieces():
                         pieces_attaquantes.append(pion)                        
         return pieces_attaquantes
 
-    def counter_en_echec(self, pos:tuple, piece:piece, piece_attaque:piece, couleur:int):
+    def counter_en_echec(self, pos:tuple, piece:Piece, piece_attaque:Piece, couleur:int):
         """
         Verifie si une piece peut protege une position en echec
         """
@@ -548,12 +549,12 @@ class pieces():
         piece_attaque.actualiser_trajectoire(self)
         return False
     
-    def en_mat(self, piece:piece):
+    def en_mat(self, piece:Piece):
         """
         Verifie si le roi est en mat ou pas
         """
         pieces_attaque = self.en_echec(piece.get_pos(), piece.couleur)
-        if len(pieces_attaque) and not len(piece.trajectoire):
+        if pieces_attaque and not piece.trajectoire:
             for p in self.liste_pieces:
                 if p.couleur == piece.couleur:
                     for piece_attaque in pieces_attaque:
@@ -568,7 +569,7 @@ class pieces():
         """
         for piece in self.liste_pieces:
             if piece.couleur == couleur and not piece.trajectoire_vide():
-                return False 
+                return False
         return True
 
     def fin_de_partie(self, roi_blanc, roi_noir, tour):
@@ -577,12 +578,16 @@ class pieces():
         """
         if self.en_mat(roi_blanc):
             return -self.haut
-        elif self.en_mat(roi_noir):
+        if self.en_mat(roi_noir):
             return self.haut
-        elif self.en_pat(tour):
+        if self.en_pat(tour):
             return 2
-        else:
-            return 0
+        return 0
 
-
+if __name__ == "__main__":
+    #disable des no member car probleme avec pygame
+    import pylint.lint
+    pylint_opts = ['--disable=trailing-whitespace', '--disable=no-member', '--disable=line-too-long', __file__]
+    pylint.lint.Run(pylint_opts)
+    
 
