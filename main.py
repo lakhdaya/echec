@@ -14,7 +14,6 @@ import gestion_fichier
 import gui as gi
 from constante import FICHIER
 from controller import pieces_handler
-
 ## A IMPLEMENT : gestion des couleurs CAD OPTION POUR CHANGER LA COULEUR DU HAUT ET BAS
 
 
@@ -70,4 +69,4 @@ if __name__ == "__main__":
         pylint.lint.Run(pylint_opts)
     elif choix == "jeux":
         main()
-
+    py.quit()
