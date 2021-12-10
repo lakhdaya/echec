@@ -1,9 +1,12 @@
+"""
+Permet la gestion des pieces au niveau frontend
+Gere l'affichage des pieces sur l'echiquier
+"""
+
 import pygame
 from constante import COULEUR_BOUTON, COULEUR_LIGNES, COULEUR_TRAJECTOIRE, NB_CASE_ECHEC, PADDING_PIECE, PADDING_TRAJECTOIRE, PATH_PIECE, TAILLE_CASE, TAILLE_GUI_X, TAILLE_GUI_Y, TYPE_CASE
 from gestion_pieces import Piece
-"""
-Fichier permettant la gestion des pieces au niveau frontend
-"""
+
 
 
 
@@ -31,10 +34,14 @@ class Echiquier(): #ecran du jeu
         return get_pos[0]//self.taille_case, get_pos[1]//self.taille_case
 
     def dessiner_echiquier(self) -> None:
+        for y in range(NB_CASE_ECHEC):
+            pass
+        for x in range(NB_CASE_ECHEC):
+            pass
         for y in range(NB_CASE_ECHEC+1):
             for x in range(NB_CASE_ECHEC):
                 pygame.draw.rect(self.fenetre, TYPE_CASE[(x+y)%2], pygame.Rect(x*self.taille_case, y%(NB_CASE_ECHEC)*self.taille_case, self.taille_case, self.taille_case), 0)
-
+    
 
     def dessiner_lignes(self) -> None:
         """
@@ -42,12 +49,11 @@ class Echiquier(): #ecran du jeu
         """
         pygame.draw.line(self.fenetre, COULEUR_LIGNES, pygame.Vector2(0, self.heightp), pygame.Vector2(self.widthp, self.heightp), 1)
         pygame.draw.line(self.fenetre, COULEUR_LIGNES, pygame.Vector2(self.widthp, 0), pygame.Vector2(self.widthp, self.heightp), 1)
-    
+
     def dessiner_piece(self, piece:Piece, pixel = 0) -> None:
         """
         Dessine une piece selon le nom,
         la get_position donnée en pixel, et la couleur
-        
         """
         canvas = pygame.transform.scale(pygame.image.load("pieces/"+PATH_PIECE[(piece.name, piece.couleur)]), (TAILLE_CASE-PADDING_PIECE//2, TAILLE_CASE-PADDING_PIECE//2))
         if pixel:
@@ -99,14 +105,13 @@ class Echiquier(): #ecran du jeu
 
     def mouse_tracker(self, pieces, gui, piece):
         if piece:
-            print("choix2")
-            piece.mouv(self.centrer(pygame.mouse.get_pos()))
+            piece.move(self.centrer(pygame.mouse.get_pos()))
             choix = True
             while choix:
                 for event in pygame.event.get():
                     if event.type==pygame.MOUSEBUTTONUP:
                         choix = False
-                    piece.mouv(self.centrer(pygame.mouse.get_pos()))
+                    piece.move(self.centrer(pygame.mouse.get_pos()))
                     self.refresh(pieces, gui, piece)
         return self.pixel_vers_case(pygame.mouse.get_pos())
 

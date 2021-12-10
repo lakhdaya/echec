@@ -35,7 +35,7 @@ class Bouton():
         if pos[0] > self.x and pos[0] < self.x+self.width:
             return pos[1] > self.y and pos[1] < self.y+self.height
         return False
-    
+
     def activer_bouton(self, pieces):
         if self.param:
             self.fonction(self.param)

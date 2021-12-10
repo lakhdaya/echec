@@ -1,20 +1,20 @@
 # , ici le nombre de case de lechiquier
 NB_CASE_ECHEC = 8
 
-#fichier a ouvrir : 
-FICHIER = "partie/sauvegarde_test.fen"
+#fichier a ouvrir :
+FICHIER = "partie/test_echec.fen"
 SETUP_BASE = "partie/start_blanc.fen"
 
 #TRADUCTION objet --> file : 
-TRADUCTION_OBJET_FILE = PATH_PIECE = {("reine", 1) : "q", ("roi", 1) : "k", ("tour", 1) : "t", 
-("cheval", 1) : "c", ("fou", 1) : "f", ("pion", 1) : "p", 
-("reine", -1) : "Q", ("roi", -1) : "K", ("tour", -1) : "T", 
+TRADUCTION_OBJET_FILE = PATH_PIECE = {("reine", 1) : "q", ("roi", 1) : "k", ("tour", 1) : "t",
+("cheval", 1) : "c", ("fou", 1) : "f", ("pion", 1) : "p",
+("reine", -1) : "Q", ("roi", -1) : "K", ("tour", -1) : "T",
 ("cheval", -1) : "C", ("fou", -1) : "F", ("pion", -1) : "P"}
 
 #path relative de chaque piece
-PATH_PIECE = {("reine", 1) : "reine_blanc.png", ("roi", 1) : "roi_blanc.png", ("tour", 1) : "tour_blanc.png", 
-("cheval", 1) : "cheval_blanc.png", ("fou", 1) : "fou_blanc.png", ("pion", 1) : "pion_blanc.png", 
-("reine", -1) : "reine_noir.png", ("roi", -1) : "roi_noir.png", ("tour", -1) : "tour_noir.png", 
+PATH_PIECE = {("reine", 1) : "reine_blanc.png", ("roi", 1) : "roi_blanc.png", ("tour", 1) : "tour_blanc.png",
+("cheval", 1) : "cheval_blanc.png", ("fou", 1) : "fou_blanc.png", ("pion", 1) : "pion_blanc.png",
+("reine", -1) : "reine_noir.png", ("roi", -1) : "roi_noir.png", ("tour", -1) : "tour_noir.png",
 ("cheval", -1) : "cheval_noir.png", ("fou", -1) : "fou_noir.png", ("pion", -1) : "pion_noir.png"}
 
 

@@ -43,10 +43,7 @@ def main():
     boutons = [gi.Bouton(nom, attribut["Position"], attribut["Taille"], attribut["Fonction"], pieces) for nom, attribut in gi.BOUTONS.items()]
     gui = gi.Gui(boutons)
 
-
     #recherche du roi noir et blanc
-    rois = { 1 : pieces.rechercher_piece_nom("roi", 1), -1 : pieces.rechercher_piece_nom("roi", -1)}
-
     pieces.actualiser_trajectoires()
     echec.dessiner_gui(gui)
     while jouer:
@@ -55,9 +52,9 @@ def main():
                 pos_depart = echec.pixel_vers_case(py.mouse.get_pos())
                 piece = pieces.rechercher_piece(pos_depart)
                 pos_arrive = echec.mouse_tracker(pieces, gui, piece)
-                pieces_handler(pieces, piece, pos_depart, pos_arrive, rois)
+                pieces_handler(pieces, piece, pos_depart, pos_arrive)
                 gui.click_sur_bouton(py.mouse.get_pos(), pieces)
-            if event.type == py.QUIT:
+            if event.type == py.QUIT or pieces.en_mat() or piece.en_pat():
                 jouer = False
         echec.refresh(pieces, gui)
 

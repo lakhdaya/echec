@@ -54,6 +54,7 @@ def lecture_fichier_fen(nom_fichier, haut:int) -> Pieces:
             disposition_pieces = file.read().split("\\")
             base = base.read().split("\\")
             positionner_pieces(base, pieces)
+            pieces.rois = { 1 : pieces.rechercher_piece_nom("roi", 1), -1 : pieces.rechercher_piece_nom("roi", -1)}
             ajouter_historique(pieces, disposition_pieces[-1])
             return pieces
 
@@ -67,7 +68,9 @@ def sauvegarder_partie(pieces:Pieces) -> None:
     Pour linstant crée juste le positionnement de la fin de partie
     A terme : sauvegarde les coups aussi
     """
-    with open("partie/sauvegarde_test.fen", "w+", encoding="utf-8") as file:
+    print("choisissez le nom du fichier : ")
+    nom_fichier = input()
+    with open(f"partie/{nom_fichier}.fen", "w+", encoding="utf-8") as file:
         for y in range(NB_CASE_ECHEC):
             for x in range(NB_CASE_ECHEC):
                 piece = pieces.rechercher_piece((x, y))
